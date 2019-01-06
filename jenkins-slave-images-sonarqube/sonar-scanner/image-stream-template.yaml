@@ -7,15 +7,6 @@ metadata:
     iconClass: "icon-jenkins"
     tags: "jenkins,slave,sonarqube"
 objects:
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    name: source-control
-    namespace: datasvc-contacts
-  type: kubernetes.io/basic-auth
-  stringData:
-    password: "${GIT_PASSWORD}"
-    username: "${GIT_USERNAME}"
 - kind: "BuildConfig"
   apiVersion: "v1"
   metadata:
@@ -30,12 +21,6 @@ objects:
         ref: ${GIT_BRANCH}
         uri: ${GIT_URL}
       contextDir: ${GIT_CONTEXT_DIR}
-      sourceSecret:
-        name: source-control
-    triggers:
-      - type: "Generic"
-        generic:
-          secret: "${WEBHOOK_SECRET}"
     strategy:
       type: "Docker"
       dockerStrategy:
@@ -66,14 +51,6 @@ parameters:
 - name: "GIT_CONTEXT_DIR"
   description: "The sub directory location of the docker file"
   value: "jenkins-slave-images-sonarqube/sonar-scanner/"
-- name: "GIT_USERNAME"
-  displayName: "Source repository service account username"
-  description: "The username of the service account to use with to pull the source code."
-  required: true
-- name: "GIT_PASSWORD"
-  displayName: "Source repository service account password/token"
-  description: "The username of the service account to use with to pull the source code."
-  required: true
 - name: "DOCKERFILE_PATH"
   description: "The path to the dockerfile to use when building the image."
   required: true
@@ -92,9 +69,4 @@ parameters:
   required: true
 - name: "GIT_SSL_NO_VERIFY"
   value: "true"
-  required: true
-- name: "WEBHOOK_SECRET"
-  description: "Webhook secret"
-  from: '[a-zA-Z0-9]{8}'
-  generate: expression
   required: true
