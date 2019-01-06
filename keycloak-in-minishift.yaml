@@ -92,7 +92,7 @@ metadata:
   name: "postgresql"
 stringData:
   database-name: "keycloak"
-  database-password: "admin"
+  database-password: "p@ssword"
   database-user: "admin"
 ---
 apiVersion: v1
