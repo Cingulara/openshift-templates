@@ -1,0 +1,51 @@
+pipeline {
+  agent {
+    label 'dotnet'
+  }
+  stages {
+    stage('Build') {
+      steps {
+        sh "dotnet build xxxxx/"
+      }
+    }
+    stage('Unit Test') {
+      steps {
+        sh "dotnet test xxxxx.tests/"
+      }
+    }
+    stage('Build Image') {
+      agent { label 'base' }
+      steps {
+        script {
+          openshift.withCluster() {
+            openshift.withProject("project-name") {
+              openshift.selector("bc", "project-name-bc").startBuild("--wait=true")
+            }
+          }
+        }
+      }
+    }
+    stage('Scan Codebase') {
+      agent { label 'sonar-dotnet' }
+      steps {
+        sh "dotnet sonarscanner begin /k:project-name /d:sonar.host.url=http://sonarqube-sonarqube.192.168.99.100.nip.io /d:sonar.login=xxxxxxxxx"
+        sh "dotnet build contacts"
+        sh "dotnet sonarscanner end /d:sonar.login=xxxxxxxx"
+      }
+    }
+    stage('Gated promotion to staging project') {
+      agent { label 'base' }
+      steps {
+        timeout(time:60, unit:'MINUTES') {
+          input message: "Would you like to promote the image to the staging project?", ok: "Promote"
+        }
+
+        script {
+          openshift.withCluster() {
+            openshift.tag("project-name/project-name:latest", "project-name/project-name:stage")
+          }
+        }
+      }
+    }
+  }
+}

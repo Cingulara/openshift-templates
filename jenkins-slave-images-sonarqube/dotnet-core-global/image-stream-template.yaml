@@ -1,0 +1,91 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: "jenkins-slave-sonarqube-dotnet-global"
+  annotations:
+    description: "The sonarqube scanner slave image for dotnet core with the global sonarscanner installed locally"
+    iconClass: "icon-jenkins"
+    tags: "jenkins,slave,sonarqube,dotnet,sonarscanner"
+objects:
+- kind: "BuildConfig"
+  apiVersion: "v1"
+  metadata:
+    name: ${IMAGE_NAME}
+  spec:
+    env:
+      - name: "GIT_SSL_NO_VERIFY"
+        value: ${GIT_SSL_NO_VERIFY}
+    source:
+      type: "Git"
+      git:
+        ref: ${GIT_BRANCH}
+        uri: ${GIT_URL}
+      contextDir: ${GIT_CONTEXT_DIR}
+      sourceSecret:
+        name: source-control
+    triggers:
+      - type: "Generic"
+        generic:
+          secret: "${WEBHOOK_SECRET}"
+    strategy:
+      type: "Docker"
+      dockerStrategy:
+        dockerfilePath: ${DOCKERFILE_PATH}
+        env:
+          - name: GIT_SSL_NO_VERIFY
+            value: ${GIT_SSL_NO_VERIFY}
+        from:
+          kind: "DockerImage"
+          name: ${BASE_IMAGE}
+    output:
+      to:
+        kind: "ImageStreamTag"
+        name: "${IMAGE_NAME}:${IMAGE_STREAM_TAG}"
+- kind: "ImageStream"
+  apiVersion: "v1"
+  metadata:
+    name: ${IMAGE_NAME}
+parameters:
+- name: "GIT_URL"
+  description: "The URL of the repository with your application source code"
+  value: "https://github.com/Cingulara/openshift-templates.git"
+  required: true
+- name: "GIT_BRANCH"
+  description: "The branch within the repository which contains the applicable source code"
+  value: "master"
+  required: true
+- name: "GIT_CONTEXT_DIR"
+  description: "The sub directory location of the docker file"
+  value: "jenkins-slave-images-sonarqube/dotnet-core-global/"
+- name: "GIT_USERNAME"
+  displayName: "Source repository service account username"
+  description: "The username of the service account to use with to pull the source code."
+  required: true
+- name: "GIT_PASSWORD"
+  displayName: "Source repository service account password/token"
+  description: "The username of the service account to use with to pull the source code."
+  required: true
+- name: "DOCKERFILE_PATH"
+  description: "The path to the dockerfile to use when building the image."
+  required: true
+  value: "Dockerfile"
+- name: "BASE_IMAGE"
+  description: "The name of the image to make a Jenkins slave."
+  value: "docker.io/openshift/jenkins-slave-base-centos7:latest"
+  required: true
+- name: "IMAGE_NAME"
+  description: "The name of the image this build will produce"
+  value: "jenkins-slave-sonarqube-dotnet-global"
+  required: true
+- name: "IMAGE_STREAM_TAG"
+  description: "The tag to associate with the image"
+  value: "latest"
+  required: true
+- name: "GIT_SSL_NO_VERIFY"
+  value: "true"
+  required: true
+- name: "WEBHOOK_SECRET"
+  description: "Webhook secret"
+  from: '[a-zA-Z0-9]{8}'
+  generate: expression
+  required: true
