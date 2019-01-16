@@ -61,7 +61,7 @@ parameters:
   required: true
 - name: "IMAGE_NAME"
   description: "The name of the image this build will produce"
-  value: "jenkins-slave-sonarqube-dotnet
+  value: "jenkins-slave-sonarqube-dotnet"
   required: true
 - name: "IMAGE_STREAM_TAG"
   description: "The tag to associate with the image"
